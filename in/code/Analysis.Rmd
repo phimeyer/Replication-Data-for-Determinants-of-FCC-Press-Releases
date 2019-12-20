@@ -1,0 +1,885 @@
+---
+title: 'Analysis: Judicial public relations: Determinants of press release publication by constitutional courts'
+author: "Philipp Meyer"
+date: "20 12 2019"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+Run source outside of chunk if it does not work. The same goes for everything that saves or loads something.Just run it outside the chunk and it will work. 
+
+```{r}
+rm(list = ls())
+
+require(Zelig)
+require(zeligverse)
+require(stargazer)
+```
+
+Read the data set. Add the correct wd before. 
+
+```{r}
+
+df <- read.csv("in/data-input/FCC_Press_Releases_data.csv")
+
+```
+
+# Descriptives
+
+Show some descriptives and central tendencies
+
+```{r}
+
+psych::describe(df)
+
+```
+
+# Step 1: Run the model, Logit with fixed effects for years
+
+```{r}
+
+# Model 1
+z.out_0 <- zelig(pr_dummy ~ oral
+               + sep_op
+               + status_quo
+               + lower_co_uncons
+               + bvf 
+               + bvl
+               + bvr
+               + bve
+               + bvg
+               + factor(year)
+               , model = "logit"
+               , data = df)
+
+# Model 2, with control variables
+z.out <- zelig(pr_dummy ~ oral
+               + sep_op
+               + status_quo
+               + lower_co_uncons
+               + bvf 
+               + bvl
+               + bvr
+               + bve
+               + bvg
+               + second_senate_dummy
+               + decision_type
+               + count
+               + prior_attention
+               + factor(year)
+               , model = "logit"
+               , data = df)
+
+summary(z.out)
+
+```
+
+Create a latex table with the stargazer package
+
+```{r}
+stargazer(glm(z.out_0$zelig.out$z.out[[1]], family=binomial(link = "logit")),glm(z.out$zelig.out$z.out[[1]],family=binomial(link = "logit")),
+          title="Logistic regressions fixed effects and robust standard errors", type="text"
+          ,font.size = "scriptsize"
+          , align=TRUE
+          , dep.var.labels= "Press release publication", 
+          covariate.labels=c("Oral hearing" 
+                             , "Dissenting opinion"
+                             , "Status quo change" 
+                             , "Lower court overruling"
+                             , "Abstract review (BvF)" 
+                             , "Concrete review (BvL)"
+                             , "Constitutional complaint (BvR)"
+                             ,"Constitutional dispute between federal organs (BvE)"
+                             ,"Dispute between federation and länder (BvG)"
+                             , "Second senate"
+                             , "Judgment"
+                             , "Length of court ruling"
+                             ,"Prior media attention"
+                            
+          ),
+          df=FALSE)
+
+```
+
+# Calculate the predicted probabilities by variable
+
+## Model 1
+
+## Oral hearing
+```{r}
+
+set.seed(1234)
+x.out1 <- setx(z.out_0, oral = 1)
+s.out1 <- sim(z.out_0, x = x.out1)
+summary(s.out1)
+
+# first difference
+set.seed(1234)
+x.high <- setx(z.out_0, oral = 1)
+x.low <- setx(z.out_0, oral = 0) 
+s.out2 <- sim(z.out, x = x.low, x1 = x.high)
+summary(s.out2)
+
+# Significant
+
+# for the first diff plot
+
+o <- s.out2$sim.out$x1$fd
+o1 <- mean(o[[1]])
+o2 <- sd(o[[1]])
+
+# 95% CI 
+cilfd_o95 <- o1-(1.96*o2)
+ciufd_o95 <- o1+(1.96*o2)
+
+```
+
+## Dissenting opinion
+```{r}
+
+set.seed(1234)
+x.out1 <- setx(z.out_0, sep_op = 1)
+s.out1 <- sim(z.out_0, x = x.out1)
+summary(s.out1)
+
+# first difference
+set.seed(1234)
+x.high <- setx(z.out_0, sep_op = 1)
+x.low <- setx(z.out_0, sep_op = 0) 
+s.out2 <- sim(z.out, x = x.low, x1 = x.high)
+summary(s.out2)
+
+# Significant
+
+# for the first diff plot
+
+s <- s.out2$sim.out$x1$fd
+s1 <- mean(s[[1]])
+s2 <- sd(s[[1]])
+
+# 95% CI 
+cilfd_s95 <- s1-(1.96*s2)
+ciufd_s95 <- s1+(1.96*s2)
+
+```
+
+## Status quo change
+```{r}
+
+set.seed(1234)
+x.out1 <- setx(z.out_0, status_quo = 1)
+s.out1 <- sim(z.out_0, x = x.out1)
+summary(s.out1)
+
+# first difference
+set.seed(1234)
+x.high <- setx(z.out_0, status_quo = 1)
+x.low <- setx(z.out_0, status_quo = 0) 
+s.out2 <- sim(z.out, x = x.low, x1 =x.high)
+summary(s.out2)
+
+# Significant
+
+# for the first diff plot
+
+sq <- s.out2$sim.out$x1$fd
+sq1 <- mean(sq[[1]])
+sq2 <- sd(sq[[1]])
+
+# 95% CI 
+cilfd_sq95 <- sq1-(1.96*sq2)
+ciufd_sq95 <- sq1+(1.96*sq2)
+
+```
+
+
+## Lower court overruling
+```{r}
+
+set.seed(1234)
+x.out1 <- setx(z.out_0, lower_co_uncons = 1)
+s.out1 <- sim(z.out_0, x = x.out1)
+summary(s.out1)
+
+# first difference
+set.seed(1234)
+x.high <- setx(z.out_0, lower_co_uncons = 1)
+x.low <- setx(z.out_0, lower_co_uncons = 0) 
+s.out2 <- sim(z.out_0, x =x.low , x1 =x.high )
+summary(s.out2)
+
+# not significant
+
+# for the first diff plot
+
+lcr <- s.out2$sim.out$x1$fd
+lcr1 <- mean(lcr[[1]])
+lcr2 <- sd(lcr[[1]])
+
+# 95% CI 
+cilfd_lcr95 <- lcr1-(1.96*lcr2)
+ciufd_lcr95 <- lcr1+(1.96*lcr2)
+
+```
+
+## Abstract review
+```{r}
+
+set.seed(1234)
+x.out1 <- setx(z.out_0, bvf = 1)
+s.out1 <- sim(z.out_0, x = x.out1)
+summary(s.out1)
+
+# first difference
+set.seed(1234)
+x.high <- setx(z.out_0, bvf = 1)
+x.low <- setx(z.out_0, bvf = 0) 
+s.out2 <- sim(z.out, x = x.low, x1 =x.high )
+summary(s.out2)
+
+# not significant
+
+# for the first diff plot
+
+ar <- s.out2$sim.out$x1$fd
+ar1 <- mean(ar[[1]])
+ar2 <- sd(ar[[1]])
+
+# 95% CI 
+cilfd_ar95 <- ar1-(1.96*ar2)
+ciufd_ar95 <- ar1+(1.96*ar2)
+
+```
+
+## Concrete review
+```{r}
+
+set.seed(1234)
+x.out1 <- setx(z.out_0, bvl = 1)
+s.out1 <- sim(z.out_0, x = x.out1)
+summary(s.out1)
+
+# first difference
+set.seed(1234)
+x.high <- setx(z.out_0, bvl = 1)
+x.low <- setx(z.out_0, bvl = 0) 
+s.out2 <- sim(z.out, x = x.low, x1 =x.high )
+summary(s.out2)
+
+# Significant
+
+# for the first diff plot
+
+cr <- s.out2$sim.out$x1$fd
+cr1 <- mean(cr[[1]])
+cr2 <- sd(cr[[1]])
+
+# 95% CI 
+cilfd_cr95 <- cr1-(1.96*cr2)
+ciufd_cr95 <- cr1+(1.96*cr2)
+
+```
+
+## Constitutional complaint
+```{r}
+
+set.seed(1234)
+x.out1 <- setx(z.out_0, bvr = 1)
+s.out1 <- sim(z.out_0, x = x.out1)
+summary(s.out1)
+
+# first difference
+set.seed(1234)
+x.high <- setx(z.out_0, bvr = 1)
+x.low <- setx(z.out_0, bvr = 0) 
+s.out2 <- sim(z.out, x = x.low, x1 =x.high)
+summary(s.out2)
+
+# Significant
+
+# for the first diff plot
+
+cc <- s.out2$sim.out$x1$fd
+cc1 <- mean(cc[[1]])
+cc2 <- sd(cc[[1]])
+
+# 95% CI 
+cilfd_cc95 <- cc1-(1.96*cc2)
+ciufd_cc95 <- cc1+(1.96*cc2)
+
+```
+
+## Constitutional dispute between federal organs
+```{r}
+
+set.seed(1234)
+x.out1 <- setx(z.out_0, bve = 1)
+s.out1 <- sim(z.out_0, x = x.out1)
+summary(s.out1)
+
+# first difference
+set.seed(1234)
+x.high <- setx(z.out_0, bve = 1)
+x.low <- setx(z.out_0, bve = 0) 
+s.out2 <- sim(z.out, x = x.low, x1 =x.high )
+summary(s.out2)
+
+# Significant
+
+# for the first diff plot
+
+df <- s.out2$sim.out$x1$fd
+df1 <- mean(df[[1]])
+df2 <- sd(df[[1]])
+
+# 95% CI 
+cilfd_df95 <- df1-(1.96*df2)
+ciufd_df95 <- df1+(1.96*df2)
+
+```
+
+## Dispute between federation and länder
+
+```{r}
+
+set.seed(1234)
+x.out1 <- setx(z.out_0, bvg = 1)
+s.out1 <- sim(z.out_0, x = x.out1)
+summary(s.out1)
+
+# first difference
+set.seed(1234)
+x.high <- setx(z.out_0, bvg = 1)
+x.low <- setx(z.out_0, bvg = 0) 
+s.out2 <- sim(z.out, x = x.low, x1 =x.high )
+summary(s.out2)
+
+# Significant
+
+# for the first diff plot
+
+dfl <- s.out2$sim.out$x1$fd
+dfl1 <- mean(dfl[[1]])
+dfl2 <- sd(dfl[[1]])
+
+# 95% CI 
+cilfd_dfl95 <- dfl1-(1.96*dfl2)
+ciufd_dfl95 <- dfl1+(1.96*dfl2)
+
+```
+
+## Plot first differences for the first model 
+```{r}
+plot(seq(0:3)
+     , las = 1.1
+     , type="n"
+     , ylim=c(0,4)
+     , xlim=c(-1,1)
+     , yaxt="n" 
+     , ylab = ""
+     , xlab="First difference in press release publication (Model 1, incl. 95% CI)"
+     , main= "" #"Mean Propability of spatial towards court in different models (incl. 90 % CI)"
+     , cex.lab = 1.
+     , cex.main = 1
+     , frame.plot=F)
+
+legend( x = 0, y = 4.2
+        , legend = c("95% Confidence interval")
+        , cex = .8
+        , bty = "n")
+
+segments(0, 0, 0, 4.4, col="darkgray", lty=2, lwd=1)
+
+# Oral
+points(o1, .1, pch=20, cex=1.5, col="black")           
+segments(cilfd_o95, .1, ciufd_o95, .1, col="black", lty=1, lwd=1.5, lend=0)
+text(-.8, .4, "Oral hearing", pos = 1,  srt=0, xpd = TRUE, cex = .8,  col = "black")
+
+# Dissent
+points(s1, .5, pch=20, cex=1.5, col="black")           
+segments(cilfd_s95, .5, ciufd_s95, .5, col="black", lty=1, lwd=1.5, lend=0)
+text(-.8, .8, "Dissenting opinion", pos = 1,  srt=0, xpd = TRUE, cex = .8,  col = "black")
+
+# Status quo
+points(sq1, .95, pch=20, cex=1.5, col="black")           
+segments(cilfd_sq95, .95, ciufd_sq95, .95, col="black", lty=1, lwd=1.5, lend=0)
+text(-.8, 1.25, "Status quo change", pos = 1,  srt=0, xpd = TRUE, cex = .8,  col = "black")
+
+# Abstract review
+points(ar1, 1.3, pch=20, cex=1.5, col="black")           
+segments(cilfd_ar95, 1.3, ciufd_ar95, 1.3, col="black", lty=1, lwd=1.5, lend=0)
+text(-.8, 1.65, "Abstract review", pos = 1,  srt=0, xpd = TRUE, cex = .8,  col = "black")
+
+# Concrete review
+points(cr1, 1.7, pch=20, cex=1.5, col="black")           
+segments(cilfd_cr95, 1.7, ciufd_cr95, 1.7, col="black", lty=1, lwd=1.5, lend=0)
+text(-.8, 2.05, "Concrete review", pos = 1,  srt=0, xpd = TRUE, cex = .8,  col = "black")
+
+# Constitutional complaint
+points(cc1, 2.15, pch=20, cex=1.5, col="black")           
+segments(cilfd_cc95, 2.15, ciufd_cc95, 2.15, col="black", lty=1, lwd=1.5, lend=0)
+text(-.8, 2.45, "Constitutional complaint", pos = 1,  srt=0, xpd = TRUE, cex = .8,  col = "black")
+
+# Dispute federal organs
+points(df1, 2.55, pch=20, cex=1.5, col="black")           
+segments(cilfd_df95, 2.55, ciufd_df95, 2.55, col="black", lty=1, lwd=1.5, lend=0)
+text(-.8, 2.9, "Federal dispute", pos = 1,  srt=0, xpd = TRUE, cex = .8,  col = "black")
+
+# Dispute länder
+points(dfl1, 3.05, pch=20, cex=1.5, col="black")           
+segments(cilfd_dfl95, 3.05, ciufd_dfl95, 3.05, col="black", lty=1, lwd=1.5, lend=0)
+text(-.8, 3.35, "Länder dispute", pos = 1,  srt=0, xpd = TRUE, cex = .8,  col = "black")
+
+# lower court  over ruling 
+points(lcr1, 3.5, pch=20, cex=1.5, col="black")           
+segments(cilfd_lcr95, 3.5, ciufd_lcr95, 3.5, col="black", lty=1, lwd=1.5, lend=0)
+text(-.8, 3.8, "Lower court overruling", pos = 1,  srt=0, xpd = TRUE, cex = .8,  col = "black")
+
+
+```
+
+# Predicted probabilities for Model 2
+
+## Oral hearing
+
+```{r}
+set.seed(1234)
+x.out1 <- setx(z.out, oral = 1)
+s.out1 <- sim(z.out, x = x.out1)
+summary(s.out1)
+
+
+# first difference
+set.seed(1234)
+x.high <- setx(z.out, oral = 1)
+x.low <- setx(z.out, oral = 0) 
+s.out2 <- sim(z.out, x =x.low , x1 =x.high )
+summary(s.out2)
+
+# not significant
+```
+
+## Separate opinion
+
+```{r}
+
+set.seed(1234)
+x.out1 <- setx(z.out, sep_op = 1)
+s.out1 <- sim(z.out, x = x.out1)
+summary(s.out1)
+
+# first difference
+set.seed(1234)
+x.high <- setx(z.out, sep_op = 1)
+x.low <- setx(z.out, sep_op = 0) 
+s.out2 <- sim(z.out, x =x.low , x1 =x.high )
+summary(s.out2)
+
+# not significant
+
+```
+
+## Status quo change
+
+```{r}
+set.seed(1234)
+x.out1 <- setx(z.out, status_quo = 1)
+s.out1 <- sim(z.out, x = x.out1)
+summary(s.out1)
+
+# first difference
+set.seed(1234)
+x.high <- setx(z.out, status_quo = 1)
+x.low <- setx(z.out, status_quo = 0) 
+s.out2 <- sim(z.out, x = x.low, x1 =x.high )
+summary(s.out2)
+
+
+# Significant
+
+# for the first diff plot
+
+sq2.1 <- s.out2$sim.out$x1$fd
+sq2.2 <- mean(sq2.1[[1]])
+sq2.3 <- sd(sq2.1[[1]])
+
+# 95% CI 
+cilfd_sq2.95 <- sq2.2-(1.96*sq2.3)
+ciufd_sq2.95 <- sq2.2+(1.96*sq2.3)
+
+```
+
+## Lower court overruling
+
+```{r}
+set.seed(1234)
+x.out1 <- setx(z.out, lower_co_uncons = 1)
+s.out1 <- sim(z.out, x = x.out1)
+summary(s.out1)
+
+# first difference
+set.seed(1234)
+x.high <- setx(z.out, lower_co_uncons = 1)
+x.low <- setx(z.out, lower_co_uncons = 0) 
+s.out2 <- sim(z.out, x = x.low, x1 = x.high )
+summary(s.out2)
+
+# not significant
+
+```
+
+## Abstract reviews
+
+```{r}
+
+set.seed(1234)
+x.out1 <- setx(z.out, bvf = 1)
+s.out1 <- sim(z.out, x = x.out1)
+summary(s.out1)
+
+# first difference
+set.seed(1234)
+x.high <- setx(z.out, bvf = 1)
+x.low <- setx(z.out, bvf = 0) 
+s.out2 <- sim(z.out, x = x.low, x1 =x.high )
+summary(s.out2)
+
+# not significant
+
+```
+
+## Concrete reviews
+
+```{r}
+set.seed(1234)
+x.out1 <- setx(z.out, bvl = 1)
+s.out1 <- sim(z.out, x = x.out1)
+summary(s.out1)
+
+
+# first difference
+set.seed(1234)
+x.high <- setx(z.out, bvl = 1)
+x.low <- setx(z.out, bvl = 0) 
+s.out2 <- sim(z.out, x =x.low , x1 =x.high )
+summary(s.out2)
+
+# Significant
+
+# for the first diff plot
+
+cr2.1 <- s.out2$sim.out$x1$fd
+cr2.2 <- mean(cr2.1[[1]])
+cr2.3 <- sd(cr2.1[[1]])
+
+# 95% CI 
+cilfd_cr2.95 <- cr2.2-(1.96*cr2.3)
+ciufd_cr2.95 <- cr2.2+(1.96*cr2.3)
+
+```
+
+
+## Constitutional complaint
+
+```{r}
+set.seed(1234)
+x.out1 <- setx(z.out, bvr = 1)
+s.out1 <- sim(z.out, x = x.out1)
+summary(s.out1)
+
+# first difference
+set.seed(1234)
+x.high <- setx(z.out, bvr = 1)
+x.low <- setx(z.out, bvr = 0) 
+s.out2 <- sim(z.out, x = x.low, x1 =x.high )
+summary(s.out2)
+
+# not significant
+
+```
+
+## Constitutional dispute between federal organs
+
+```{r}
+
+set.seed(1234)
+x.out1 <- setx(z.out, bve = 1)
+s.out1 <- sim(z.out, x = x.out1)
+summary(s.out1)
+
+
+# first difference
+set.seed(1234)
+x.high <- setx(z.out, bve = 1)
+x.low <- setx(z.out, bve = 0) 
+s.out2 <- sim(z.out, x = x.low , x1 =x.high )
+summary(s.out2)
+
+# Significant
+
+# for the first diff plot
+
+d2.1 <- s.out2$sim.out$x1$fd
+d2.2 <- mean(d2.1[[1]])
+d2.3 <- sd(d2.1[[1]])
+
+# 95% CI 
+cilfd_d2.95 <- d2.2-(1.96*d2.3)
+ciufd_d2.95 <- d2.2+(1.96*d2.3)
+
+```
+
+## Dispute between federation and länder
+
+```{r}
+set.seed(1234)
+x.out1 <- setx(z.out, bvg = 1)
+s.out1 <- sim(z.out, x = x.out1)
+summary(s.out1)
+
+# first difference
+set.seed(1234)
+x.high <- setx(z.out, bvg = 1)
+x.low <- setx(z.out, bvg = 0) 
+s.out2 <- sim(z.out, x = x.low, x1 =x.high )
+summary(s.out2)
+
+# Significant
+
+# for the first diff plot
+
+dl2.1 <- s.out2$sim.out$x1$fd
+dl2.2 <- mean(dl2.1[[1]])
+dl2.3 <- sd(dl2.1[[1]])
+
+# 95% CI 
+cilfd_dl2.95 <- dl2.2-(1.96*dl2.3)
+ciufd_dl2.95 <- dl2.2+(1.96*dl2.3)
+
+```
+
+## Second senate
+
+```{r}
+set.seed(1234)
+x.out1 <- setx(z.out, second_senate_dummy = 1)
+s.out1 <- sim(z.out, x = x.out1)
+summary(s.out1)
+
+# first difference
+set.seed(1234)
+x.high <- setx(z.out, second_senate_dummy = 1)
+x.low <- setx(z.out, second_senate_dummy = 0) 
+s.out2 <- sim(z.out, x = x.low , x1 = x.high )
+summary(s.out2)
+
+# # Significant
+
+# for the first diff plot
+
+ss2.1 <- s.out2$sim.out$x1$fd
+ss2.2 <- mean(ss2.1[[1]])
+ss2.3 <- sd(ss2.1[[1]])
+
+# 95% CI 
+cilfd_ss2.95 <- ss2.2-(1.96*ss2.3)
+ciufd_ss2.95 <- ss2.2+(1.96*ss2.3)
+
+```
+
+## Judgment
+
+```{r}
+set.seed(1234)
+x.out1 <- setx(z.out, decision_type = 1)
+s.out1 <- sim(z.out, x = x.out1)
+summary(s.out1)
+
+
+# first difference
+set.seed(1234)
+x.high <- setx(z.out, decision_type = 1)
+x.low <- setx(z.out, decision_type = 0) 
+s.out2 <- sim(z.out, x =x.low , x1 = x.high)
+summary(s.out2)
+
+# not significant
+
+```
+
+## Length of court ruling
+
+```{r}
+set.seed(1234)
+x.out1 <- setx(z.out, count = 122, count = 115240)
+s.out1 <- sim(z.out, x = x.out1)
+summary(s.out1)
+
+# first difference
+set.seed(1234)
+x.high <- setx(z.out, count = 115240)
+x.low <- setx(z.out, count = 122) 
+s.out2 <- sim(z.out, x = x.low, x1 = x.high)
+summary(s.out2)
+
+# Significant
+
+# for the first diff plot
+
+le2.1 <- s.out2$sim.out$x1$fd
+le2.2 <- mean(le2.1[[1]])
+le2.3 <- sd(le2.1[[1]])
+
+# 95% CI 
+cilfd_le2.95 <- le2.2-(1.96*le2.3)
+ciufd_le2.95 <- le2.2+(1.96*le2.3)
+
+```
+
+## Prior media attention
+
+```{r}
+set.seed(1234)
+x.out1 <- setx(z.out, prior_attention = 1)
+s.out1 <- sim(z.out, x = x.out1)
+summary(s.out1)
+
+
+# first difference
+set.seed(1234)
+x.high <- setx(z.out,  prior_attention = 1)
+x.low <- setx(z.out,  prior_attention = 0)
+s.out2 <- sim(z.out, x = x.high, x1 = x.low)
+summary(s.out2)
+
+# not significant
+
+```
+
+## Plot first differences for the second model 
+```{r}
+
+plot(seq(0:3)
+     , las = 1.1
+     , type="n"
+     , ylim=c(0,4)
+     , xlim=c(-1,1)
+     , yaxt="n" 
+     , ylab = ""
+     , xlab="First difference in press release publication (Model 2, incl. 95% CI)"
+     , main= "" #"Mean Propability of spatial towards court in different models (incl. 90 % CI)"
+     , cex.lab = 1.
+     , cex.main = 1
+     , frame.plot=F)
+
+legend( x = 0, y = 4.2
+        , legend = c("95% Confidence interval")
+        , cex = .8
+        , bty = "n"
+)
+
+segments(0, 0, 0, 4.4, col="darkgray", lty=2, lwd=1)
+
+# Status quo
+points(sq2.2, .95, pch=20, cex=1.5, col="black")           
+segments(cilfd_sq2.95, .95, ciufd_sq2.95, .95, col="black", lty=1, lwd=1.5, lend=0)
+text(-.8, 1.25, "Status quo change", pos = 1,  srt=0, xpd = TRUE, cex = .8,  col = "black")
+
+# Concrete review
+points(cr2.2, 1.7, pch=20, cex=1.5, col="black")           
+segments(cilfd_cr2.95, 1.7, ciufd_cr2.95, 1.7, col="black", lty=1, lwd=1.5, lend=0)
+text(-.8, 2.05, "Concrete review", pos = 1,  srt=0, xpd = TRUE, cex = .8,  col = "black")
+
+# Dispute federal organs
+points(d2.2, 2.55, pch=20, cex=1.5, col="black")           
+segments(cilfd_d2.95, 2.55, ciufd_d2.95, 2.55, col="black", lty=1, lwd=1.5, lend=0)
+text(-.8, 2.9, "Federal dispute", pos = 1,  srt=0, xpd = TRUE, cex = .8,  col = "black")
+
+# Dispute länder
+points(dl2.2, 3.5, pch=20, cex=1.5, col="black")         
+segments(cilfd_dl2.95, 3.5, ciufd_dl2.95,  3.5, col="black", lty=1, lwd=1.5, lend=0)
+text(-.8, 3.8, "Länder dispute",  pos = 1,  srt=0, xpd = TRUE, cex = .8,  col = "black")
+
+# --- Control variables
+
+# Second Senate
+points(ss2.2, .1, pch=20, cex=1.5, col="black")           
+segments(cilfd_ss2.95, .1, ciufd_ss2.95, .1, col="black", lty=1, lwd=1.5, lend=0)
+text(-.8, .4, "Second senate", pos = 1,  srt=0, xpd = TRUE, cex = .8,  col = "black")
+
+# Length
+points(le2.2, .5, pch=20, cex=1.5, col="black")           
+segments(cilfd_le2.95, .5, ciufd_le2.95, .5, col="black", lty=1, lwd=1.5, lend=0)
+text(-.8, .8, "Length of court ruling", pos = 1,  srt=0, xpd = TRUE, cex = .8,  col = "black")
+
+```
+
+# Additional analysis to control for institutional-based interaction terms
+
+In the following Logit regressions with interaction effects will be shown. This controls for potential effects due to the institutional organization of the FCC, which is splitted into two senates with slightly different competencies.
+
+```{r}
+
+# Load the data again
+
+df <- read.csv("/in/data-input/FCC_Press_Releases_data.csv")
+
+```
+
+
+## Run the model with interaction terms
+```{r}
+
+z.out_i <- zelig(pr_dummy ~ oral
+                 + sep_op
+                 + status_quo
+                 + lower_co_uncons
+                 + bvf*second_senate_dummy 
+                 + bvl*second_senate_dummy 
+                 + bvr*second_senate_dummy 
+                 + bve
+                 + bvg
+                 + second_senate_dummy
+                 + decision_type
+                 + count
+                 + prior_attention
+                 + factor(year)
+                 , model = "logit"
+                 , data = df)
+
+summary(z.out_i)
+
+```
+
+## Latex table
+```{r}
+
+stargazer(glm(z.out_0$zelig.out$z.out[[1]], family=binomial(link = "logit")),glm(z.out$zelig.out$z.out[[1]],family=binomial(link = "logit")),glm(z.out_i$zelig.out$z.out[[1]],family=binomial(link = "logit")),
+          title="Logistic regressions fixed effects and robust standard errors", type="text"
+          ,font.size = "scriptsize"
+          , align=TRUE
+          , dep.var.labels= "Press release publication", 
+          covariate.labels=c("Oral hearing" 
+                             , "Dissenting opinion"
+                             , "Status quo change" 
+                             , "Lower court overruling"
+                             , "Abstract review (BvF)" 
+                             , "Concrete review (BvL)"
+                             , "Constitutional complaint (BvR)"
+                             ,"Constitutional dispute between federal organs (BvE)"
+                             ,"Dispute between federation and länder (BvG)"
+                             , "Second senate"
+                             , "Judgment"
+                             , "Length of court ruling"
+                             , "Prior media attention"
+                             #, "Abstract review (BvF)*Second senate" 
+                             #, "Concrete review (BvL)*Second senate"
+                             #, "Constitutional complaint (BvR)*Second senate"
+                             
+          ),
+          df=FALSE)
+
+
+```
+
