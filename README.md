@@ -40,7 +40,7 @@ FCC_Press_Releases_data.csv:
 
 ## General information on the finaldata_FCC_PR.csv (in/prepareddata)
 
-The **finaldata_FCC_PR.csv** and accompanied codebooks can be found on figshare (https://figshare.com/articles/Judicial_Public_Relations_of_the_Federal_German_Constitutional_Court_FCC_/7628729). It can be used to run the analysis, but is mainly for data transparency and was created for the initial submission of the paper.
+The **finaldata_FCC_PR.csv** and the accompanied codebook can be found in the folger "prepareddata" and also on figshare (https://figshare.com/articles/Judicial_Public_Relations_of_the_Federal_German_Constitutional_Court_FCC_/7628729). It can be used to run the analysis, but is mainly for data transparency and was created for the initial submission of the paper.
 
 The **finaldata_FCC_PR.csv** contains the following variables:
 
